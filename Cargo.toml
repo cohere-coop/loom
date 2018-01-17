@@ -1,0 +1,6 @@
+[package]
+name = "loom"
+version = "0.1.0"
+authors = ["Betsy Haibel <betsy@wecohere.com>"]
+
+[dependencies]
