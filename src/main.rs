@@ -1,12 +1,14 @@
 extern crate futures;
 extern crate tokio_core;
 extern crate tokio_process;
+extern crate tokio_io;
 
-use std::process::{Command, Output};
+use std::process::{Command, Stdio, ExitStatus};
 use std::io::{self, Write};
 
+use futures::{Future, Stream, BoxFuture};
 use tokio_core::reactor::Core;
-use tokio_process::CommandExt;
+use tokio_process::{CommandExt, Child};
 
 fn main() {
     ::std::process::exit(match run_core_loop() {
@@ -21,26 +23,32 @@ fn main() {
 fn run_core_loop() -> Result<(), (std::io::Error)> {
     match Core::new() {
         Ok(mut unwrapped_core) => {
-            let output = run_command_on_core(&mut unwrapped_core, &mut Command::new("ls"));
-            print_output_details(output);
+            run_command_on_core(&mut unwrapped_core, &mut Command::new("ping").arg("google.com"));
             Ok(())
         },
         Err(e) => { Err(e) } 
     }
 }
 
-fn run_command_on_core(core: &mut Core, command: &mut Command) -> Output {
-    let child = command.output_async(&core.handle());
-    core.run(child).expect("failed to capture child output")
+fn run_command_on_core(core: &mut Core, command: &mut Command) {
+    let child = command
+        .stdout(Stdio::piped())
+        .spawn_async(&core.handle())
+        .expect("failed to spawn child process");
+
+    match core.run(stdout_printer(child)) {
+        Ok(code) => println!("child process exited with code: {}", code),
+        Err(e)   => panic!("failed to wait for child process exit: {}", e)
+    }
 }
 
-fn print_output_details(output: Output) {
-    match output.status.code() {
-        Some(code) => println!("process exited with code: {}", code),
-        None       => println!("process terminated by signal")
-    }
-    match String::from_utf8(output.stdout) {
-        Ok(output_string) => println!("process output:\n{}", output_string),
-        Err(e)            => println!("could not parse process output:\n {:?}", e)
-    }
-}
+fn stdout_printer(mut child_process: Child) -> BoxFuture<ExitStatus, io::Error> {
+    let stdout = child_process.stdout().take().expect("couldn't capture stdout");
+    let reader = io::BufReader::new(stdout);
+    let lines = tokio_io::io::lines(reader);
+    let cycle = lines.for_each(|line| {
+        println!("Line: {}", line);
+        Ok(())
+    });
+    cycle.join(child_process).map(|((), s)| s).boxed()
+} 

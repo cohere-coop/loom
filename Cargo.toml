@@ -7,3 +7,4 @@ authors = ["Betsy Haibel <betsy@wecohere.com>"]
 tokio-process = "0.1.5"
 futures = "0.1.*"
 tokio-core = "0.1.*"
+tokio-io = "0.1.*"
