@@ -6,7 +6,7 @@ extern crate tokio_io;
 use std::process::{Command, Stdio, ExitStatus};
 use std::io::{self, Write};
 
-use futures::{Future, Stream, BoxFuture};
+use futures::{Future, Stream};
 use tokio_core::reactor::Core;
 use tokio_process::{CommandExt, Child};
 
@@ -24,6 +24,7 @@ fn run_core_loop() -> Result<(), (std::io::Error)> {
     match Core::new() {
         Ok(mut unwrapped_core) => {
             run_command_on_core(&mut unwrapped_core, &mut Command::new("ping").arg("google.com"));
+            run_command_on_core(&mut unwrapped_core, &mut Command::new("ls"));
             Ok(())
         },
         Err(e) => { Err(e) } 
@@ -42,7 +43,7 @@ fn run_command_on_core(core: &mut Core, command: &mut Command) {
     }
 }
 
-fn stdout_printer(mut child_process: Child) -> BoxFuture<ExitStatus, io::Error> {
+fn stdout_printer(mut child_process: Child) -> Box<Future<Item = ExitStatus, Error = io::Error>> {
     let stdout = child_process.stdout().take().expect("couldn't capture stdout");
     let reader = io::BufReader::new(stdout);
     let lines = tokio_io::io::lines(reader);
@@ -50,5 +51,5 @@ fn stdout_printer(mut child_process: Child) -> BoxFuture<ExitStatus, io::Error> 
         println!("Line: {}", line);
         Ok(())
     });
-    cycle.join(child_process).map(|((), s)| s).boxed()
+    Box::new(cycle.join(child_process).map(|((), s)| s))
 } 
