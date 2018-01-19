@@ -58,15 +58,25 @@ fn run_command_on_core(core: &mut Core, command: &mut Command) {
         Ok(())
     });
 
-    match core.run(ping_cycle.join(ls_cycle).join(ls).join(ping)) {
+    match core.run(ping_cycle) {
         Ok(code) => println!("child process stdout finished"),
         Err(e)   => panic!("child process stdout error: {:?}", e)
     }
 
-    // match core.run(child) {
-    //     Ok(code) => println!("child process exited with code: {}", code),
-    //     Err(e)   => panic!("failed to wait for child process exit: {}", e)
-    // }
+    match core.run(ping) {
+        Ok(code) => println!("child process exited with code: {}", code),
+        Err(e)   => panic!("failed to wait for child process exit: {}", e)
+    }
+
+    match core.run(ls_cycle) {
+        Ok(code) => println!("child process stdout finished"),
+        Err(e)   => panic!("child process stdout error: {:?}", e)
+    }
+
+    match core.run(ls) {
+        Ok(code) => println!("child process exited with code: {}", code),
+        Err(e)   => panic!("failed to wait for child process exit: {}", e)
+    }
 }
 
 // fn stdout_printer(mut child_process: Child) -> Box<Future<Item = (), Error = io::Error>> {
