@@ -2,6 +2,7 @@ extern crate futures;
 extern crate tokio_core;
 extern crate tokio_io;
 extern crate tokio_process;
+extern crate tokio_signal;
 
 pub mod runner;
 
