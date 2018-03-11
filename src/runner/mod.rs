@@ -8,20 +8,20 @@ use futures::{Stream, Future};
 use tokio_core::reactor::Core;
 use tokio_signal;
 
-use super::CommandParams;
+use super::{CommandParams, Config};
 use self::child_with_streams::ChildWithStreams;
 
-pub fn run_commands(config: Vec<CommandParams>) -> Result<(), io::Error> {
+pub fn run_commands(config: Config) -> Result<(), io::Error> {
     match Core::new() {
         Ok(mut unwrapped_core) => {
-            let (printer_vec, exit_status_vec): (Vec<_>, Vec<_>) = config.into_iter().map(|command_params| {
-                let mut ping = ChildWithStreams::new(&unwrapped_core.handle(), &mut Command::new(command_params.bin).arg(command_params.arg));
-                let stdout_lines = *ping.stdout_as_lines().take().unwrap();
-                let printer = stdout_lines.for_each(|line| {
-                    println!("Line: {}", line);
+            let (printer_vec, exit_status_vec): (Vec<_>, Vec<_>) = config.iter().map(|(name, command_params)| {
+                let mut child = ChildWithStreams::new(&unwrapped_core.handle(), name, command_params);
+                let stdout_lines = *child.stdout_as_named_lines().take().unwrap();
+                let printer = stdout_lines.for_each(|(name, line)| {
+                    println!("{}: {}", name, line);
                     Ok(())
                 });
-                let exit_status = ping.exit_status().take().unwrap();
+                let exit_status = child.exit_status().take().unwrap();
 
                 (printer, exit_status)
             }).unzip();
