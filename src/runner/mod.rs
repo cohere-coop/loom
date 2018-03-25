@@ -7,7 +7,7 @@ use futures::{Stream, Future};
 use tokio_core::reactor::Core;
 use tokio_signal;
 
-use super::Config;
+use super::config::Config;
 use self::child_with_streams::ChildWithStreams;
 
 pub fn run_commands(config: Config) -> Result<(), io::Error> {

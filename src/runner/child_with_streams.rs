@@ -7,7 +7,7 @@ use tokio_core::reactor::Handle;
 use tokio_io::io::{lines, Lines};
 use tokio_process::{CommandExt, ChildStdout};
 
-use super::super::CommandParams;
+use super::super::config::CommandParams;
 
 pub struct ChildWithStreams<'a> {
     name: &'a str,
