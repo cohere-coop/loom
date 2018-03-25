@@ -1,14 +1,13 @@
 mod child_with_streams;
 
 use std::io;
-use std::process::Command;
 
 use futures;
 use futures::{Stream, Future};
 use tokio_core::reactor::Core;
 use tokio_signal;
 
-use super::{CommandParams, Config};
+use super::Config;
 use self::child_with_streams::ChildWithStreams;
 
 pub fn run_commands(config: Config) -> Result<(), io::Error> {

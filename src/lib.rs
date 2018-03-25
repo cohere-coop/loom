@@ -12,7 +12,6 @@ pub mod runner;
 use std::io::prelude::*;
 use std::fs::File;
 use std::collections::HashMap;
-use std::process::Command;
 
 #[derive(Deserialize,Copy,Clone)]
 pub struct CommandParams<'a> {
@@ -35,8 +34,7 @@ pub fn run_from_config(filename: &str) -> Result<(), (std::io::Error)> {
     let mut config_toml = String::new();
     File::open(filename).unwrap().read_to_string(&mut config_toml).expect("could not open Loomfile");
 
-    let mut config: Config = toml::from_str(&config_toml).unwrap();
-    // let params_vec: Vec<&mut CommandParams> = config.values_mut().collect();
+    let config: Config = toml::from_str(&config_toml).unwrap();
 
     runner::run_commands(config)
 }
