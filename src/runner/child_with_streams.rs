@@ -19,6 +19,7 @@ impl<'a> ChildWithStreams<'a> {
     pub fn new(handle: &Handle, name: &'a str, params: &CommandParams) -> Self {
         let mut child = Command::new(params.bin())
             .args(params.args())
+            .current_dir(params.directory())
             .stdout(Stdio::piped())
             .spawn_async(&handle)
             .expect("failed to spawn child process");
